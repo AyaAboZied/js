@@ -1,5 +1,5 @@
 pipeline {
-    aagent { label 'jenkins-ubuntu-slave' }
+    agent { label 'jenkins-ubuntu-slave' }
     stages {
         stage('Hello') {
             steps {
