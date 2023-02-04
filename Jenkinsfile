@@ -5,7 +5,7 @@ pipeline {
             steps {
                 script {
                    if (env.BRANCH_NAME == "release") {
-                       withCredentials([usernamePassword(credentialsId: 'jenkins', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                       withCredentials([usernamePassword(credentialsId: 'aya', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                            sh """
                                 docker login -u $USERNAME -p $PASSWORD
                                 docker build -t kareemelkasaby/itimansbakehouse:${BUILD_NUMBER} .
