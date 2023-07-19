@@ -1,0 +1,48 @@
+OpenVPN Instalation
+
+OVERVIEW
+
+#Install OpenVPN client on Centos6
+yum update
+Stop selinux
+yum install vim
+yum install wget
+wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+rpm -Uvh epel-release-6-8.noarch.rpm 
+yum install openvpn
+yum install easy-rsa
+cp -r /usr/share/easy-rsa/ /etc/openvpn/
+vim /etc/sysctl.conf → net.ipv4.ip_forward = 1
+sysctl -p
+Create the needed client.ovpnfile under /etc/openvpn/
+Add at the bottom : “up /etc/openvpn/start_obfsproxy.sh
+down /etc/openvpn/kill_obfsproxy.sh”
+#Install obfs proxy on centos6
+yum install openssl-devel bzip2-devel gcc readline-devel 
+wget https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tgz
+tar xzvf Python-2.7.13.tgz
+cd Python-2.7.13
+./configure --with-ensurepip=install --enable-shared --prefix=/usr/local LDFLAGS="-Wl,--rpath=/usr/local/lib"
+make altinstall
+vim /etc/profile.d/custom.sh → PATH="$PATH:/usr/local/lib"
+pip2.7 install --upgrade pip
+pip2.7 install obfsproxy
+# Create Obfs Proxy scripts
+cd /etc/openvpn/
+vim start_obfsproxy.sh
+#!/bin/bash
+echo "Starting Obfsproxy.."
+/usr/local/bin/obfsproxy --log-file=/tmp/obfsproxy.log --log-min-severity=info obfs3 socks 127.0.0.1:10194 &
+vim kill_obfsproxy.sh
+#!/bin/bash
+echo "Shutting down obfsproxy..."
+process_id=`ps aux | grep obfsproxy.sh | grep -v grep | awk '{print $2}'`
+kill $process_id
+[root@openvpn-client openvpn]# chmod a+x kill_obfsproxy.sh 
+[root@openvpn-client openvpn]# chmod a+x start_obfsproxy.sh 
+
+#Iptables conf
+iptables -I FORWARD -d 10.5.0.0/24 -j ACCEPT
+iptables -I FORWARD -s 10.5.0.0/24 -j ACCEPT
+iptables -t nat -A POSTROUTING -s 10.5.0.53/32 -j SNAT --to-source 10.8.0.14
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 -o eno1 -j MASQUERADE
